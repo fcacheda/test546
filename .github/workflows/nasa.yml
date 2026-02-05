@@ -1,0 +1,41 @@
+name: Update NASA APOD JSON
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 7 * * *"  # diario 07:00 UTC (ajústalo si quieres)
+
+permissions:
+  contents: write
+
+jobs:
+  apod:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch APOD JSON from NASA
+        env:
+          NASA_API_KEY: ${{ secrets.NASA_API_KEY }}
+        run: |
+          mkdir -p assets
+
+          # Si no hay secret, usa DEMO_KEY (opcional; útil para arrancar)
+          if [ -z "${NASA_API_KEY}" ]; then
+            NASA_API_KEY="DEMO_KEY"
+          fi
+
+          curl -s "https://api.nasa.gov/planetary/apod?api_key=${NASA_API_KEY}" \
+            -o assets/apod.json
+
+          echo "Saved assets/apod.json"
+          head -c 300 assets/apod.json || true
+          echo
+
+      - name: Commit and push apod.json
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add assets/apod.json
+          git commit -m "Update APOD" || exit 0
+          git push
