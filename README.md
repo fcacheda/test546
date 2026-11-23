@@ -1,1 +1,1 @@
-# test546
+# Testing the home page for Networks lab assignment
